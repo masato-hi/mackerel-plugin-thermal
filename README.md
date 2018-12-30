@@ -1,1 +1,1 @@
-# mackerel-plugin-thermal-sensor
+# mackerel-plugin-thermal
