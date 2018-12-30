@@ -1,0 +1,72 @@
+#!/bin/bash
+
+meta() {
+  local raw="$(fetch)"
+  local chips="$(echo "${raw}" | cut -f 1 | uniq)"
+  local length="$(echo "${raw}" | wc -l)"
+
+  echo '# mackerel-agent-plugin'
+  echo '{'
+  echo '  "graphs": {'
+  echo '    "sensors.thermal": {'
+  echo '      "label": "Thermal",'
+  echo '      "unit": "float",'
+  echo '      "metrics": ['
+
+  local i=0
+  echo "${chips}" | while read chip; do
+    IFS=$'\n'
+    local j=0
+    for label in $(echo "${raw}" | grep "${chip}" | cut -f 2); do
+      echo '        {'
+      echo "          \"name\": \"${chip}_${j}\","
+      echo "          \"label\": \"${chip} - ${label}\","
+      echo '          "stacked": false'
+      local i="$(expr ${i} + 1)"
+      local j="$(expr ${j} + 1)"
+      if [ $i -lt $length ]; then
+        echo '        },'
+      else
+        echo '        }'
+      fi
+    done
+  done
+
+  echo '      ]'
+  echo '    }'
+  echo '  }'
+  echo '}'
+}
+
+metrics() {
+  local time="$(date +"%s")"
+  local raw="$(fetch)"
+  local chips="$(echo "${raw}" | cut -f 1 | uniq)"
+
+  echo "${chips}" | while read chip; do
+    local i="0"
+    echo "${raw}" | grep "${chip}" | cut -f 3 | while read temp; do
+      echo -e "sensors.thermal.${chip}_${i}\t${temp}\t${time}"
+      local i="$(expr ${i} + 1)"
+    done
+  done
+}
+
+fetch() {
+  sensors -A -u 2>/dev/null | while read line; do
+    if [[ "${line}" =~ ^([a-z0-9_\-]+)$ ]]; then
+      local chip="${BASH_REMATCH[1]}"
+    elif [[ "${line}" =~ ^([a-zA-Z0-9_\ \-]+):$ ]]; then
+      local label="${BASH_REMATCH[1]}"
+    elif [[ "${line}" =~ ^temp[0-9]+_input:\ ([0-9\.]+)$ ]]; then
+      local temp="${BASH_REMATCH[1]}"
+      echo -e "${chip}\t${label}\t${temp}"
+    fi
+  done
+}
+
+if [ -n "${MACKEREL_AGENT_PLUGIN_META}" ]; then
+  meta
+else
+  metrics
+fi
