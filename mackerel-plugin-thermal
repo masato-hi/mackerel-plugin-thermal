@@ -9,7 +9,7 @@ meta() {
   echo '{'
   echo '  "graphs": {'
   echo '    "sensors.thermal": {'
-  echo '      "label": "Thermal",'
+  echo '      "label": "Thermal Sensors",'
   echo '      "unit": "float",'
   echo '      "metrics": ['
 
