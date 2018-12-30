@@ -8,7 +8,7 @@ meta() {
   echo '# mackerel-agent-plugin'
   echo '{'
   echo '  "graphs": {'
-  echo '    "sensors.thermal": {'
+  echo '    "sensors.thermal.#": {'
   echo '      "label": "Thermal Sensors",'
   echo '      "unit": "float",'
   echo '      "metrics": ['
@@ -19,8 +19,8 @@ meta() {
     local j=0
     for label in $(echo "${raw}" | grep "${chip}" | cut -f 2); do
       echo '        {'
-      echo "          \"name\": \"${chip}_${j}\","
-      echo "          \"label\": \"${chip} - ${label}\","
+      echo "          \"name\": \"${j}\","
+      echo "          \"label\": \"${label}\","
       echo '          "stacked": false'
       local i="$(expr ${i} + 1)"
       local j="$(expr ${j} + 1)"
@@ -46,7 +46,7 @@ metrics() {
   echo "${chips}" | while read chip; do
     local i="0"
     echo "${raw}" | grep "${chip}" | cut -f 3 | while read temp; do
-      echo -e "sensors.thermal.${chip}_${i}\t${temp}\t${time}"
+      echo -e "sensors.thermal.${chip}.${i}\t${temp}\t${time}"
       local i="$(expr ${i} + 1)"
     done
   done
